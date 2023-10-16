@@ -20,7 +20,7 @@ python pred_MemDA_Plain.py
 
 ## Parameters & Configuration
 
-You can implement different configuration by modifying the parameters in the `setting/Param.py` file.
+You can implement different configurations by modifying the parameters in the `setting/Param.py` file.
 Here's a detailed description of the parameters:
 
 - `DATA_SET`: Specify which dataset to use, including PeMS20/Beijing/Electricity/COVID-CHI.
@@ -39,16 +39,16 @@ Here's a detailed description of the parameters:
 We collected data from four cities covering different data sources and concept drift types. The PeMS and Beijing datasets are collected from the traffic speeds of major roads in California and Beijing. The Electricity dataset contains the electricity consumption. And the COVID-CHI dataset is the demand for shared bicycles collected from Chicago.
 
 **Data structure**:
-- Data is structured as [description of data structure, for example: time-series sequences of length X with Y features].
+- Data is structured as time-series sequences of length X with Y features.
 
 **File Format**:
-- The data is provided in [data.csv], with each row representing [a timestamp] and each column representing [a variable.].
-- For graph-structured data, we also provide an adjacency matrix file in [adj.pkl].
+- The data is provided in data.csv, with each row representing a timestamp and each column representing a variable.
+- For graph-structured data, we also provide an adjacency matrix file in adj.pkl.
 
 
 ## Citation
 
-If you find our work useful, please citing:
+If you find our work useful, please cite the following:
 
 ```
 @article{cai2023memda,
@@ -61,4 +61,4 @@ If you find our work useful, please citing:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
