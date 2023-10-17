@@ -26,9 +26,6 @@ This repository contains the official code and datasets presented in our paper, 
     ├── Electricity
     └── PeMS20
 ```
-The pred_MemDA_beijing.py is singled out because the Beijing dataset can't be loaded into the gpu at once because the data is too large, otherwise the code is consistent with pred_MemDA.py.
-
-Note that small datasets are known to be sensitive to the initialization of Replay Memory, so we recommend using the plain version of MemDA pred_MemDA_Plain.py on small datasets for more stable results.
 
 
 ## Usage
@@ -38,6 +35,10 @@ To use the model for forecasting, follow the command below:
 ```bash
 python pred_MemDA.py
 ```
+
+The pred_MemDA_beijing.py is singled out because the Beijing dataset can't be loaded into the GPU at once because the data is too large, otherwise the code is consistent with pred_MemDA.py.
+
+Note that small datasets are known to be sensitive to the initialization of Replay Memory, so we recommend using the plain version of MemDA pred_MemDA_Plain.py on small datasets for more stable results.
 
 ## Parameters & Configuration
 
