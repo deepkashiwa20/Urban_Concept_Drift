@@ -11,8 +11,8 @@ TRAINVALSPLIT = 0.2
 
 
 # MemDA
-DATA_SET = 'Beijing'
-GPU = '3'
+DATA_SET = 'PeMS20'
+GPU = '0'
 encoder = 'gwn'
 encoder_dim = 256
 look_back = 2

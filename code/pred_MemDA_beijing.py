@@ -37,13 +37,13 @@ class TensorDatasetIndex(Dataset):
 
 def get_key(query, mem_start=0):
     keys = []
-    for i in range(1, look_back+1):
-        key = query - i*day_interval + mem_start
+    for i in range(1, look_back + 1):
+        key = query - i * day_interval + mem_start
         keys.append(key)
 
         key = query - i * day_interval + TIMESTEP_IN + mem_start
         keys.append(key)
-    mask = np.where(keys[-2]>=0)
+    mask = np.where(keys[-2] >= 0)
     return keys, mask
 
 
@@ -131,6 +131,7 @@ def trainModel(mode, XS, YS):
     # Replay Memory
     replay_memory = torch.randn((XS.shape[0], encoder_dim, n_node, channel), dtype=torch.float)
     nn.init.xavier_normal_(replay_memory)
+    replay_memory[:look_back * day_interval] = torch.zeros((look_back * day_interval, encoder_dim, n_node, channel), dtype=torch.float).to(device)
 
     # Train
     model = getModel(device, encoder, n_node, channel, TIMESTEP_OUT, adj_path, adj_type)
@@ -160,7 +161,7 @@ def trainModel(mode, XS, YS):
             loss_sum += loss.item() * y.shape[0]
             n += y.shape[0]
         for i in range(look_back):
-            replay_memory_tmp[i*day_interval:(i+1)*day_interval] = replay_memory_tmp[look_back*day_interval:(look_back+1)*day_interval]
+            replay_memory_tmp[i * day_interval:(i + 1) * day_interval] = replay_memory_tmp[look_back * day_interval:(look_back + 1) * day_interval]
 
         train_loss = loss_sum / n
         val_loss = evaluateModel(model, criterion, val_iter, replay_memory_tmp, mem_start=0, update=True)
@@ -176,18 +177,13 @@ def trainModel(mode, XS, YS):
                 break
         endtime = datetime.now()
         epoch_time = (endtime - starttime).seconds
-        print("epoch", epoch, "time used:", epoch_time, " seconds ", "train loss:", train_loss, "validation loss:",
-              val_loss)
+        print("epoch", epoch, "time used:", epoch_time, " seconds ", "train loss:", train_loss, "validation loss:", val_loss)
         with open(PATH + '/' + MODELNAME + '_log.txt', 'a') as f:
-            f.write("%s, %d, %s, %d, %s, %s, %.10f, %s, %.10f\n" % (
-                "epoch", epoch, "time used", epoch_time, "seconds", "train loss", train_loss, "validation loss:",
-                val_loss))
+            f.write("%s, %d, %s, %d, %s, %s, %.10f, %s, %.10f\n" % ("epoch", epoch, "time used", epoch_time, "seconds", "train loss", train_loss, "validation loss:", val_loss))
 
     # Save
-    torch_score = evaluateModel(model, criterion, train_iter, replay_memory, mem_start=0,
-                                update=True)
-    YS_pred = predictModel(model, torch.utils.data.DataLoader(trainval_data, 12, shuffle=False), replay_memory,
-                           mem_start=0, update=True)
+    torch_score = evaluateModel(model, criterion, train_iter, replay_memory, mem_start=0, update=True)
+    YS_pred = predictModel(model, torch.utils.data.DataLoader(trainval_data, 12, shuffle=False), replay_memory, mem_start=0, update=True)
     np.save(PATH + '/' + MODELNAME + '_memory.npy', replay_memory[-look_back * day_interval - 1:-1].cpu())
     YS, YS_pred = scaler.inverse_transform(np.squeeze(YS)), scaler.inverse_transform(np.squeeze(YS_pred))
     MSE, RMSE, MAE, MAPE = evaluate(YS, YS_pred)
@@ -215,8 +211,7 @@ def testModel(mode, XS, YS):
     replay_memory_holder = torch.zeros((XS.shape[0], encoder_dim, n_node, channel), dtype=torch.float)
     replay_memory = torch.cat([replay_memory_his, replay_memory_holder], dim=0)
 
-    torch_score = evaluateModel(model, criterion, test_iter, replay_memory, mem_start=len(replay_memory_his),
-                                update=True)
+    torch_score = evaluateModel(model, criterion, test_iter, replay_memory, mem_start=len(replay_memory_his), update=True)
     YS_pred = predictModel(model, test_iter, replay_memory, mem_start=len(replay_memory_his), update=True)
     YS, YS_pred = scaler.inverse_transform(np.squeeze(YS)), scaler.inverse_transform(np.squeeze(YS_pred))
     np.save(PATH + '/' + MODELNAME + '_prediction.npy', YS_pred)
@@ -228,16 +223,12 @@ def testModel(mode, XS, YS):
     print("%s, %s, Torch MSE, %.10f" % (MODELNAME, mode, torch_score))
     f = open(PATH + '/' + MODELNAME + '_prediction_scores.txt', 'a')
     f.write("%s, %s, Torch MSE, %.10f\n" % (MODELNAME, mode, torch_score))
-    print("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % (
-        MODELNAME, mode, MSE, RMSE, MAE, MAPE))
-    f.write("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (
-        MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+    print("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % ( MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+    f.write("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (MODELNAME, mode, MSE, RMSE, MAE, MAPE))
     for i in range(TIMESTEP_OUT):
         MSE, RMSE, MAE, MAPE = evaluate(YS[:, i, :], YS_pred[:, i, :])
-        print("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % (
-            i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
-        f.write("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (
-            i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+        print("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % (i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+        f.write("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
     f.close()
     print('Model Testing Ended ...', time.ctime())
 

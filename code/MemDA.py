@@ -40,19 +40,24 @@ class NTN(nn.Module):
 class Decoder(torch.nn.Module):
     def __init__(self, in_dim, hidden_dim, out_dim):
         super(Decoder, self).__init__()
-        self.end_conv_1 = nn.Conv2d(in_channels=in_dim,
-                                    out_channels=hidden_dim,
-                                    kernel_size=(1, 1),
-                                    bias=True)
-
-        self.end_conv_2 = nn.Conv2d(in_channels=hidden_dim,
-                                    out_channels=out_dim,
-                                    kernel_size=(1, 1),
-                                    bias=True)
+        self.end_conv_1 = nn.Conv2d(in_channels=in_dim, out_channels=hidden_dim, kernel_size=(1, 1), bias=True)
+        self.end_conv_2 = nn.Conv2d(in_channels=hidden_dim, out_channels=out_dim, kernel_size=(1, 1), bias=True)
 
     def forward(self, x):
         x = F.relu(self.end_conv_1(x))
         x = self.end_conv_2(x)
+        return x
+
+
+class Embed_Trans(torch.nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim):
+        super(Embed_Trans, self).__init__()
+        self.conv_1 = nn.Conv2d(in_channels=in_dim, out_channels=hidden_dim, kernel_size=(1, 1), bias=True)
+        self.conv_2 = nn.Conv2d(in_channels=hidden_dim, out_channels=out_dim, kernel_size=(1, 1), bias=True)
+
+    def forward(self, x):
+        x = F.relu(self.conv_1(x))
+        x = self.conv_2(x)
         return x
 
 
@@ -61,10 +66,11 @@ class memda_net(nn.Module):
         super(memda_net, self).__init__()
         self.num_nodes = num_nodes
         if encoder == 'gwn':
-            self.encoder = gwnet_head(device, num_nodes=num_nodes, in_dim=channel, supports=supports,
-                                      skip_channels=encoder_dim)
+            self.encoder = gwnet_head(device, num_nodes=num_nodes, in_dim=channel, supports=supports, skip_channels=encoder_dim)
         else:
             raise NameError('Encoder Undefined')
+
+        self.emd_trans = nn.ModuleList([Embed_Trans(in_dim=encoder_dim, hidden_dim=64, out_dim=encoder_dim) for _ in range(2 * look_back)])
 
         # Memory Modules
         self.pattern_memory = nn.Parameter(torch.randn(mem_num, mem_dim), requires_grad=True)
@@ -94,6 +100,8 @@ class memda_net(nn.Module):
 
     def forward(self, x, embedding):
         hidden_x = self.encoder(x)
+        for idx, layer in enumerate(self.emd_trans):
+            embedding[idx] = layer(embedding[idx])
         hidden_merge = torch.cat([hidden_x] + embedding, dim=-1)
 
         hidden_merge_re = hidden_merge.permute(0, 2, 3, 1)
@@ -108,17 +116,13 @@ class memda_net(nn.Module):
         hidden_cts = self.drift_proj1(hidden_merge_re)
         drift_results = []
         for i in range(self.look_back):
-            if 2*i+1<self.meta_num//2:
-                drift_results.append(
-                    self.drift_x1[i](hidden_cts[:, :, 0, :], hidden_cts[:, :, 2 * i + 1, :]))  # ([0,1],[0,3]...)
+            if 2 * i + 1 < self.meta_num // 2:
+                drift_results.append(self.drift_x1[i](hidden_cts[:, :, 0, :], hidden_cts[:, :, 2 * i + 1, :]))  # ([0,1],[0,3]...)
             if 2 * i + 4 < self.meta_num // 2:
-                drift_results.append(
-                    self.drift_x2[i](hidden_cts[:, :, 2 * i + 1, :], hidden_cts[:, :, 2 * i + 3, :]))  # ([1,3],[3,5]...)
-                drift_results.append(
-                    self.drift_y[i](hidden_cts[:, :, 2 * i + 2, :], hidden_cts[:, :, 2 * i + 4, :]))  # ([2,4],[4,6]...)
-                drift_results.append(self.drift_xy[i]  # ([12,34],[12,56])
-                                     (hidden_cts[:, :, 1:3, :].reshape(-1, self.num_nodes, 2 * ntn_dim),
-                                      hidden_cts[:, :, 2 * i + 3:2 * i + 5, :].reshape(-1, self.num_nodes, 2 * ntn_dim)))
+                drift_results.append(self.drift_x2[i](hidden_cts[:, :, 2 * i + 1, :], hidden_cts[:, :, 2 * i + 3, :]))  # ([1,3],[3,5]...)
+                drift_results.append(self.drift_y[i](hidden_cts[:, :, 2 * i + 2, :], hidden_cts[:, :, 2 * i + 4, :]))  # ([2,4],[4,6]...)
+                drift_results.append(self.drift_xy[i](hidden_cts[:, :, 1:3, :].reshape(-1, self.num_nodes, 2 * ntn_dim),
+                                                      hidden_cts[:, :, 2 * i + 3:2 * i + 5, :].reshape(-1, self.num_nodes, 2 * ntn_dim)))  # ([12,34],[12,56])
 
         drift_mtx = torch.cat(drift_results, dim=-1)
         drift_mtx = self.drift_proj2(drift_mtx)

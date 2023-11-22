@@ -23,6 +23,7 @@ from setting.Dataset_Setting import *
 from utils.Utils import *
 from utils.Metrics import *
 
+
 def getXSYS(data, mode):
     TRAIN_NUM = int(data.shape[0] * train_ration)
     XS, YS = [], []
@@ -55,7 +56,9 @@ def getXSYS(data, mode):
             y_c2 = data[i - day_interval * 2 + TIMESTEP_IN:i - day_interval * 2 + TIMESTEP_IN + TIMESTEP_OUT]
             XS_C2.append(x_c2), YS_C2.append(y_c2)
     XS, YS, XS_C, YS_C, XS_C2, YS_C2 = np.array(XS), np.array(YS), np.array(XS_C), np.array(YS_C), np.array(XS_C2), np.array(YS_C2)
-    XS, YS, XS_C, YS_C, XS_C2, YS_C2 = XS[:, :, :, np.newaxis], YS[:, :, :, np.newaxis], XS_C[:, :, :, np.newaxis], YS_C[:, :, :, np.newaxis], XS_C2[:, :, :, np.newaxis], YS_C2[:, :, :, np.newaxis]
+    XS, YS, XS_C, YS_C, XS_C2, YS_C2 = XS[:, :, :, np.newaxis], YS[:, :, :, np.newaxis], \
+                                       XS_C[:, :, :, np.newaxis], YS_C[:, :, :, np.newaxis], \
+                                       XS_C2[:, :, :, np.newaxis], YS_C2[:, :, :, np.newaxis]
     XS = np.concatenate((XS, XS_C, YS_C, XS_C2, YS_C2), axis=-1)
     XS = XS.transpose(0, 3, 2, 1)
     return XS, YS
@@ -89,15 +92,8 @@ class NTN(nn.Module):
 class Decoder(torch.nn.Module):
     def __init__(self, in_dim, hidden_dim, out_dim):
         super(Decoder, self).__init__()
-        self.end_conv_1 = nn.Conv2d(in_channels=in_dim,
-                                    out_channels=hidden_dim,
-                                    kernel_size=(1, 1),
-                                    bias=True)
-
-        self.end_conv_2 = nn.Conv2d(in_channels=hidden_dim,
-                                    out_channels=out_dim,
-                                    kernel_size=(1, 1),
-                                    bias=True)
+        self.end_conv_1 = nn.Conv2d(in_channels=in_dim, out_channels=hidden_dim, kernel_size=(1, 1), bias=True)
+        self.end_conv_2 = nn.Conv2d(in_channels=hidden_dim, out_channels=out_dim, kernel_size=(1, 1), bias=True)
 
     def forward(self, x):
         x = F.relu(self.end_conv_1(x))
@@ -142,6 +138,7 @@ class memda_net_plain(nn.Module):
         hidden_yc = self.encoder(y_c)
         hidden_xc2 = self.encoder(x_c2)
         hidden_yc2 = self.encoder(y_c2)
+
         hidden_merge = torch.cat((hidden, hidden_xc, hidden_yc, hidden_xc2, hidden_yc2), dim=-1)
 
         hidden_merge_re = hidden_merge.permute(0, 2, 3, 1)
@@ -259,12 +256,9 @@ def trainModel(mode, XS, YS):
                 break
         endtime = datetime.now()
         epoch_time = (endtime - starttime).seconds
-        print("epoch", epoch, "time used:", epoch_time, " seconds ", "train loss:", train_loss, "validation loss:",
-              val_loss)
+        print("epoch", epoch, "time used:", epoch_time, " seconds ", "train loss:", train_loss, "validation loss:", val_loss)
         with open(PATH + '/' + MODELNAME + '_log.txt', 'a') as f:
-            f.write("%s, %d, %s, %d, %s, %s, %.10f, %s, %.10f\n" % (
-                "epoch", epoch, "time used", epoch_time, "seconds", "train loss", train_loss, "validation loss:",
-                val_loss))
+            f.write("%s, %d, %s, %d, %s, %s, %.10f, %s, %.10f\n" % ("epoch", epoch, "time used", epoch_time, "seconds", "train loss", train_loss, "validation loss:", val_loss))
 
     # Save
     torch_score = evaluateModel(model, criterion, train_iter)
@@ -302,16 +296,12 @@ def testModel(mode, XS, YS):
     print("%s, %s, Torch MSE, %.10f" % (MODELNAME, mode, torch_score))
     f = open(PATH + '/' + MODELNAME + '_prediction_scores.txt', 'a')
     f.write("%s, %s, Torch MSE, %.10f\n" % (MODELNAME, mode, torch_score))
-    print("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % (
-        MODELNAME, mode, MSE, RMSE, MAE, MAPE))
-    f.write("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (
-        MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+    print("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % (MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+    f.write("all pred steps, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (MODELNAME, mode, MSE, RMSE, MAE, MAPE))
     for i in range(TIMESTEP_OUT):
         MSE, RMSE, MAE, MAPE = evaluate(YS[:, i, :], YS_pred[:, i, :])
-        print("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % (
-            i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
-        f.write("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (
-            i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+        print("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f" % (i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
+        f.write("%d step, %s, %s, MSE, RMSE, MAE, MAPE, %.10f, %.10f, %.10f, %.10f\n" % (i + 1, MODELNAME, mode, MSE, RMSE, MAE, MAPE))
     f.close()
     print('Model Testing Ended ...', time.ctime())
 
