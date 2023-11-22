@@ -31,7 +31,7 @@ Basic data analysis with jupyter notebook:
 - The data is provided in data.csv, with each row representing a timestamp and each column representing a node.
 - For graph-structured data, we also provide an adjacency matrix file in adj.pkl.
 
-### Usage
+## Usage
 
 To use the model for forecasting, follow the command below:
 
