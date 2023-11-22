@@ -1,0 +1,13 @@
+epoch, 0, time used, 307, seconds, train loss, 0.2585100136, validation loss:, 0.3067539321
+epoch, 1, time used, 312, seconds, train loss, 0.2327154327, validation loss:, 0.2924751027
+epoch, 2, time used, 312, seconds, train loss, 0.2284197309, validation loss:, 0.2917963916
+epoch, 3, time used, 304, seconds, train loss, 0.2262514793, validation loss:, 0.2890700854
+epoch, 4, time used, 301, seconds, train loss, 0.2249907585, validation loss:, 0.2896684663
+epoch, 5, time used, 302, seconds, train loss, 0.2232986652, validation loss:, 0.2927017432
+epoch, 6, time used, 302, seconds, train loss, 0.2217414128, validation loss:, 0.2926011654
+epoch, 7, time used, 304, seconds, train loss, 0.2205879329, validation loss:, 0.2910956228
+epoch, 8, time used, 303, seconds, train loss, 0.2192577151, validation loss:, 0.2912900391
+epoch, 9, time used, 304, seconds, train loss, 0.2184293995, validation loss:, 0.2960171105
+epoch, 10, time used, 304, seconds, train loss, 0.2172781728, validation loss:, 0.2927448747
+epoch, 11, time used, 305, seconds, train loss, 0.2164949440, validation loss:, 0.2928749690
+epoch, 12, time used, 301, seconds, train loss, 0.2157081028, validation loss:, 0.2955678229
