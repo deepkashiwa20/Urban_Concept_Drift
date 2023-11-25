@@ -2,7 +2,7 @@
 
 This repository contains the official code and datasets presented in our paper, "MemDA: Forecasting Urban Time Series with Memory-based Drift Adaptation," accepted by the 32nd ACM International Conference on Information and Knowledge Management (CIKM '23).
 
-[Read the CIKM23 proceeding paper here or arxiv](https://dl.acm.org/doi/abs/10.1145/3583780.3614962). 
+[Read the CIKM23 proceeding paper here.](https://dl.acm.org/doi/abs/10.1145/3583780.3614962). 
 
 arXiv is here. [![Arxiv link](https://img.shields.io/static/v1?label=arXiv&message=MemDA&color=red&logo=arxiv)](https://arxiv.org/abs/2309.14216)
 
